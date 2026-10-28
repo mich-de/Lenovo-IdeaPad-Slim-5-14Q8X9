@@ -79,8 +79,9 @@ Il progetto include il generatore ufficiale **UUP Dump** già preconfigurato per
     - **Synaptics / Goodix Fingerprint Reader, WMI ACPI Bridge, Lenovo Power & Battery Management**
   - Include inoltre l'ultimo aggiornamento BIOS ufficiale per IdeaPad Slim 5 14Q8X9 (`83HL`) versione **`PUCN55WW`** nella cartella `BIOS_Update_14Q8X9\`.
 
-### Passaggi per generare la ISO:
-1. **Avvia la compilazione della ISO:** Fai doppio click su **[`CREA_ISO_26H2_ARM64.bat`](file:///D:/Lenovo-IdeaPad-Slim-5-14Q8X9/CREA_ISO_26H2_ARM64.bat)** e accetta la richiesta Amministratore (UAC).
-   - I **346 driver `.inf`** presenti in `iso_builder\uup_pkg\Drivers` verranno iniettati automaticamente dentro `boot.wim` e `install.wim`.
-   - Il file [`autounattend_snapdragon_14Q8X9.xml`](file:///D:/Lenovo-IdeaPad-Slim-5-14Q8X9/iso_builder/autounattend_snapdragon_14Q8X9.xml) viene **incorporato direttamente dentro la ISO** (`\autounattend.xml` + `\sources\$OEM$\$$\Panther\unattend.xml`) per forzare **sempre la creazione dell'Account Locale** (`BypassNRO=1`, `HideOnlineAccountScreens=1`, `AllowMSA=0`) e rimuovere tutta la telemetria senza dover fare nulla a mano.
-2. Al termine troverai il file `.ISO` pronto in `iso_builder\uup_pkg\`. Scrivilo su USB con **Rufus** (schema partizione **GPT**, target **UEFI**).
+### ISO Già Generata / Come Rigenerarla (`Zscaler-Safe & Zero-Admin`):
+- **ISO Pronta:** **[`Win11_26H2_ARM64_IT_Lenovo_14Q8X9_Clean.iso`](file:///D:/Lenovo-IdeaPad-Slim-5-14Q8X9/Win11_26H2_ARM64_IT_Lenovo_14Q8X9_Clean.iso)** (`6.60 GB`, UEFI ARM64 Bootable, Home + Pro). Scrivila su chiavetta USB con **Rufus** (schema partizione **GPT**, sistema destinazione **UEFI (non CSM)**).
+- **Rigenerazione 100% compatibile Zscaler/EDR (senza `reg.exe`, `cscript` o privilegi Admin):**
+  - Fai doppio click su **[`CREA_ISO_26H2_ARM64.bat`](file:///D:/Lenovo-IdeaPad-Slim-5-14Q8X9/CREA_ISO_26H2_ARM64.bat)** (che esegue [`iso_builder/BUILD_ISO_SAFE.ps1`](file:///D:/Lenovo-IdeaPad-Slim-5-14Q8X9/iso_builder/BUILD_ISO_SAFE.ps1) usando esclusivamente `wimlib-imagex.exe`, `offlinereg.exe` e `cdimage.exe` in user-mode).
+  - I **346 driver `.inf`** vengono iniettati in `$WinPEDriver$` (caricati automaticamente da Windows Setup in WinPE e nel sistema finale).
+  - Il file [`autounattend_snapdragon_14Q8X9.xml`](file:///D:/Lenovo-IdeaPad-Slim-5-14Q8X9/iso_builder/autounattend_snapdragon_14Q8X9.xml) è incorporato nella ISO (`\autounattend.xml` + `\sources\$OEM$\$$\Panther\unattend.xml`) per forzare **sempre la creazione dell'Account Locale** (`BypassNRO=1`, `HideOnlineAccountScreens=1`, `AllowMSA=0`), rimuovere tutto il bloatware/Edge/WinZip e installare **7-Zip, Brave, VLC, Notepad++ e `LenovoCheckup_ARM64.exe`**.

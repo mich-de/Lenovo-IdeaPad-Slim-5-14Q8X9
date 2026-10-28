@@ -33,7 +33,7 @@
 7. **Connectivity & Ports Checklist + Export Report:** Interactive verification for USB-C (PD Charging + DisplayPort), USB-A, HDMI, MicroSD, Headphone Jack, Hinge/Chassis inspection, and 1-click JSON/Print Report export.
 
 ### `[DEVOPS-AGENT]` Clean Windows 11 26H2 ARM64 ISO Builder (`iso_builder/`)
-1. **UUP Dump Integration:** Queries `https://api.uupdump.net` for latest Windows 11 **26H2 ARM64** (`26300.9725`, UUID `f6722ac5-6c3c-4fb5-ab61-f3fa020c8a27`, Italian `it-it`, Home + Pro).
+1. **UUP Dump Integration & Zscaler-Safe Builder (`iso_builder/BUILD_ISO_SAFE.ps1`):** Queries `https://api.uupdump.net` for latest Windows 11 **26H2 ARM64** (`26300.9725`, UUID `f6722ac5-6c3c-4fb5-ab61-f3fa020c8a27`, Italian `it-it`, Home + Pro) and builds the bootable UEFI ISO in pure user-mode via `wimlib-imagex.exe`, `offlinereg.exe`, and `cdimage.exe` (zero `reg.exe`, `cscript.exe`, or IFEO hooks).
 2. **De-Bloat & Compression (`ConvertConfig.ini` + `CustomAppsList.txt`):**
    - `CustomList=1`, `SkipEdge=1`, `Cleanup=1`, `ResetBase=1`, `AddDrivers=1`.
    - Retains only Windows Store, Defender (`SecHealthUI`), Winget (`DesktopAppInstaller`), Terminal, Notepad, Calculator, Camera, Snipping Tool, **Microsoft Prism ARM64 compatibility (`ApplicationCompatibilityEnhancements`)**, and hardware media codecs (AV1/HEVC/VP9/Dolby) for the Qualcomm Adreno X1 GPU.

@@ -1,8 +1,16 @@
 @echo off
-title Installazione App Default ARM64 (7-Zip, Brave, VLC, Notepad++) e Pulizia Edge/WinZip
+title Installazione App Default ARM64 (7-Zip, Brave, VLC, Notepad++), Driver & Debloat
 set "APPDIR=%SystemDrive%\Windows\Temp\OEM_Apps"
 
-echo [*] Rimozione eventuale WinZip / Microsoft Edge residuo...
+echo [*] Installazione eventuali driver Qualcomm / Lenovo ARM64 residui...
+if exist "%SystemDrive%\Windows\Temp\OEM_Drivers" (
+    pnputil.exe /add-driver "%SystemDrive%\Windows\Temp\OEM_Drivers\*.inf" /subdirs /install >nul 2>&1
+    rmdir /s /q "%SystemDrive%\Windows\Temp\OEM_Drivers" >nul 2>&1
+)
+
+echo [*] Rimozione Bloatware Inbox Windows 11, Microsoft Edge e WinZip...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$bloat = @('*Clipchamp*','*BingNews*','*BingWeather*','*MicrosoftSolitaireCollection*','*MicrosoftTeams*','*MicrosoftOfficeHub*','*PowerAutomateDesktop*','*QuickAssist*','*Todos*','*WindowsFeedbackHub*','*WindowsMaps*','*ZuneMusic*','*GetHelp*','*Getstarted*','*People*','*DevHome*','*OutlookForWindows*','*GamingApp*','*XboxGamingOverlay*','*XboxIdentityProvider*','*XboxSpeechToTextOverlay*','*XboxTCUI*','*CrossDevice*','*YourPhone*','*Copilot*','*WinZip*'); foreach ($p in $bloat) { Get-AppxPackage -AllUsers $p -ErrorAction SilentlyContinue | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like $p } | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue }" >nul 2>&1
+
 winget uninstall --id Corel.WinZip --silent --accept-source-agreements >nul 2>&1
 winget uninstall --name "WinZip" --silent --accept-source-agreements >nul 2>&1
 
