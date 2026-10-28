@@ -41,6 +41,12 @@ async function loadDiagnostics(forceRefresh = false) {
   }
 }
 
+function asArray(v) {
+  if (Array.isArray(v)) return v;
+  if (v && typeof v === "object" && Object.keys(v).length > 0) return [v];
+  return [];
+}
+
 function addSpecRow(dl, label, value) {
   const dt = document.createElement("dt");
   dt.textContent = label;
@@ -56,7 +62,7 @@ function renderOverview(data) {
   const prod = hw.Product || {};
   const bios = hw.BIOS || {};
   const os = hw.OS || {};
-  const cpus = hw.CPUs || [];
+  const cpus = asArray(hw.CPUs);
   const cpu = cpus[0] || {};
   const bat = data.battery_report || {};
 
@@ -69,7 +75,7 @@ function renderOverview(data) {
   // Alerts
   const alertsList = document.getElementById("alerts-list");
   alertsList.innerHTML = "";
-  (data.alerts || []).forEach((a) => {
+  asArray(data.alerts).forEach((a) => {
     const div = document.createElement("div");
     div.className = `alert-item ${a.level}`;
     div.innerHTML = `<strong>${a.title}</strong><span>${a.detail}</span>`;
@@ -129,8 +135,8 @@ function renderOverview(data) {
   // Disks & SMART
   const diskBox = document.getElementById("spec-disks");
   diskBox.innerHTML = "";
-  const disks = hw.PhysicalDisks || [];
-  const vols = hw.Volumes || [];
+  const disks = asArray(hw.PhysicalDisks);
+  const vols = asArray(hw.Volumes);
   const diskBadge = document.getElementById("disk-verdict-badge");
   const allHealthy = disks.every((d) => (d.HealthStatus || "").toUpperCase() === "HEALTHY");
   diskBadge.textContent = disks.length ? (allHealthy ? "SMART OK" : "ATTENZIONE") : "N/D";
@@ -167,7 +173,7 @@ function renderOverview(data) {
   // GPU, Display & RAM
   const dlGpu = document.getElementById("spec-gpu-ram");
   dlGpu.innerHTML = "";
-  const gpus = hw.GPUs || [];
+  const gpus = asArray(hw.GPUs);
   gpus.forEach((g, idx) => {
     addSpecRow(dlGpu, `GPU #${idx + 1}`, g.Name);
     addSpecRow(dlGpu, "Driver GPU", g.DriverVersion);
@@ -176,7 +182,7 @@ function renderOverview(data) {
     }
   });
   addSpecRow(dlGpu, "RAM Totale", `${data.live?.ram_total_gb || "?"} GB`);
-  const ramSticks = hw.RAM || [];
+  const ramSticks = asArray(hw.RAM);
   if (ramSticks.length > 0) {
     const speeds = ramSticks.map((r) => r.ConfiguredClockSpeed || r.Speed).filter(Boolean);
     addSpecRow(dlGpu, "Moduli / Velocita'", `${ramSticks.length} banchi @ ${speeds[0] || "LPDDR5x"} MT/s`);
@@ -195,7 +201,7 @@ function renderOverview(data) {
   // Originality & Replaced Parts Table
   const origWrap = document.getElementById("originality-table-wrap");
   const origBadge = document.getElementById("orig-summary-badge");
-  const checks = data.originality_checks || [];
+  const checks = asArray(data.originality_checks);
   if (origWrap) {
     const allOk = checks.every((c) => c.badge === "ok");
     origBadge.textContent = allOk ? "100% COMPONENTI ORIGINALI OEM" : "VERIFICA RICAMBI / OEM";
@@ -233,7 +239,7 @@ function renderOverview(data) {
 
 function renderPeripherals(data) {
   const hw = data.hardware || {};
-  const errs = hw.DeviceErrors || [];
+  const errs = asArray(hw.DeviceErrors);
   const errBadge = document.getElementById("pnp-err-count");
   const errBox = document.getElementById("pnp-errors-box");
 
@@ -266,7 +272,7 @@ function renderPeripherals(data) {
   const grid = document.getElementById("subsystems-grid");
   grid.innerHTML = "";
   categories.forEach((cat) => {
-    const items = subs[cat.key] || [];
+    const items = asArray(subs[cat.key]);
     const card = document.createElement("div");
     card.className = "card";
     const listHtml =

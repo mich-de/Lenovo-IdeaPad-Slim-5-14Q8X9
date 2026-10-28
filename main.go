@@ -122,14 +122,14 @@ function Get-ClassDevices($classList, $namePattern) {
     return $items
 }
 
-$npuDevices = Get-ClassDevices @('ComputeAccelerator', 'NeuralProcessor') 'NPU|Hexagon|Snapdragon.*Tensor|Neural|AI Boost'
-$wifiBt = Get-ClassDevices @('Net', 'Bluetooth') 'Wi-Fi|Wireless|FastConnect|Qualcomm.*Network|Bluetooth'
-$cameras = Get-ClassDevices @('Camera', 'Image') 'Camera|Webcam|IR |Integrated'
-$audio = Get-ClassDevices @('Media', 'AudioEndpoint') 'Audio|Speaker|Altoparlant|Microphone|Microfono|Realtek|Senary|Aqstic|Qualcomm.*Audio'
-$biometrics = Get-ClassDevices @('Biometric') 'Fingerprint|Goodix|Synaptics|ELAN|FocalTech|Hello'
-$usbControllers = Get-ClassDevices @('USB') 'USB4|eXtensible Host Controller|Type-C|UCM'
-$sensors = Get-ClassDevices @('Sensor', 'System') 'Sensor|Accelerometer|Gyro|Lid|ALS|Ambient|Thermal|Qualcomm.*SoC'
-$monitors = Get-ClassDevices @('Monitor') '.*'
+$npuDevices = @(Get-ClassDevices @('ComputeAccelerator', 'NeuralProcessor') 'NPU|Hexagon|Snapdragon.*Tensor|Neural|AI Boost')
+$wifiBt = @(Get-ClassDevices @('Net', 'Bluetooth') 'Wi-Fi|Wireless|FastConnect|Qualcomm.*Network|Bluetooth')
+$cameras = @(Get-ClassDevices @('Camera', 'Image') 'Camera|Webcam|IR |Integrated')
+$audio = @(Get-ClassDevices @('Media', 'AudioEndpoint') 'Audio|Speaker|Altoparlant|Microphone|Microfono|Realtek|Senary|Aqstic|Qualcomm.*Audio')
+$biometrics = @(Get-ClassDevices @('Biometric') 'Fingerprint|Goodix|Synaptics|ELAN|FocalTech|Hello')
+$usbControllers = @(Get-ClassDevices @('USB') 'USB4|eXtensible Host Controller|Type-C|UCM')
+$sensors = @(Get-ClassDevices @('Sensor', 'System') 'Sensor|Accelerometer|Gyro|Lid|ALS|Ambient|Thermal|Qualcomm.*SoC')
+$monitors = @(Get-ClassDevices @('Monitor') '.*')
 
 $lic = Get-CimInstance SoftwareLicensingProduct -Filter "ApplicationID='55c92734-d682-4d71-983e-d6ec3f16059f' AND PartialProductKey IS NOT NULL" | Select-Object -First 1 Name, LicenseStatus, PartialProductKey
 $tpm = Get-CimInstance -Namespace "Root\CIMV2\Security\MicrosoftTpm" -ClassName Win32_Tpm | Select-Object IsActivated_InitialValue, IsEnabled_InitialValue, SpecVersion

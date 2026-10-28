@@ -140,6 +140,14 @@ def get_battery_report_xml() -> Dict[str, Any]:
     return info
 
 
+def _as_list(v: Any) -> List[Dict[str, Any]]:
+    if isinstance(v, list):
+        return v
+    if isinstance(v, dict) and v:
+        return [v]
+    return []
+
+
 def evaluate_parts_originality(raw: Dict[str, Any], bat_xml: Dict[str, Any], live: Dict[str, Any]) -> List[Dict[str, str]]:
     """
     Compares detected hardware serials, manufacturers, and specs against
@@ -152,9 +160,9 @@ def evaluate_parts_originality(raw: Dict[str, Any], bat_xml: Dict[str, Any], liv
     bios = raw.get("BIOS") or {}
     board = raw.get("BaseBoard") or {}
     enclosure = raw.get("Chassis") or {}
-    cpus = raw.get("CPUs") or []
-    disks = raw.get("PhysicalDisks") or []
-    edid_list = raw.get("MonitorsEDID") or []
+    cpus = _as_list(raw.get("CPUs"))
+    disks = _as_list(raw.get("PhysicalDisks"))
+    edid_list = _as_list(raw.get("MonitorsEDID"))
     subs = raw.get("Subsystems") or {}
     wmi_bat = raw.get("WmiBattery") or {}
 
@@ -311,8 +319,8 @@ def evaluate_parts_originality(raw: Dict[str, Any], bat_xml: Dict[str, Any], liv
             })
 
     # 6. Wireless Module (Soldered Qualcomm FastConnect 7800 / NCM825)
-    net_devs = subs.get("NetworkBluetooth") or []
-    net_names = " | ".join([x.get("FriendlyName", "") for x in net_devs if x.get("FriendlyName")])
+    net_devs = _as_list(subs.get("NetworkBluetooth"))
+    net_names = " | ".join([x.get("FriendlyName", "") for x in net_devs if isinstance(x, dict) and x.get("FriendlyName")])
     has_fc7800 = ("FASTCONNECT" in net_names.upper()) or ("QUALCOMM" in net_names.upper()) or ("WCN" in net_names.upper())
     checks.append({
         "component": "Modulo Wi-Fi 7 & Bluetooth",
@@ -426,14 +434,14 @@ function Get-ClassDevices($classList, $namePattern) {
     return $items
 }
 
-$npuDevices = Get-ClassDevices @('ComputeAccelerator', 'NeuralProcessor') 'NPU|Hexagon|Snapdragon.*Tensor|Neural|AI Boost'
-$wifiBt = Get-ClassDevices @('Net', 'Bluetooth') 'Wi-Fi|Wireless|FastConnect|Qualcomm.*Network|Bluetooth'
-$cameras = Get-ClassDevices @('Camera', 'Image') 'Camera|Webcam|IR |Integrated'
-$audio = Get-ClassDevices @('Media', 'AudioEndpoint') 'Audio|Speaker|Altoparlant|Microphone|Microfono|Realtek|Senary|Aqstic|Qualcomm.*Audio'
-$biometrics = Get-ClassDevices @('Biometric') 'Fingerprint|Goodix|Synaptics|ELAN|FocalTech|Hello'
-$usbControllers = Get-ClassDevices @('USB') 'USB4|eXtensible Host Controller|Type-C|UCM'
-$sensors = Get-ClassDevices @('Sensor', 'System') 'Sensor|Accelerometer|Gyro|Lid|ALS|Ambient|Thermal|Qualcomm.*SoC'
-$monitors = Get-ClassDevices @('Monitor') '.*'
+$npuDevices = @(Get-ClassDevices @('ComputeAccelerator', 'NeuralProcessor') 'NPU|Hexagon|Snapdragon.*Tensor|Neural|AI Boost')
+$wifiBt = @(Get-ClassDevices @('Net', 'Bluetooth') 'Wi-Fi|Wireless|FastConnect|Qualcomm.*Network|Bluetooth')
+$cameras = @(Get-ClassDevices @('Camera', 'Image') 'Camera|Webcam|IR |Integrated')
+$audio = @(Get-ClassDevices @('Media', 'AudioEndpoint') 'Audio|Speaker|Altoparlant|Microphone|Microfono|Realtek|Senary|Aqstic|Qualcomm.*Audio')
+$biometrics = @(Get-ClassDevices @('Biometric') 'Fingerprint|Goodix|Synaptics|ELAN|FocalTech|Hello')
+$usbControllers = @(Get-ClassDevices @('USB') 'USB4|eXtensible Host Controller|Type-C|UCM')
+$sensors = @(Get-ClassDevices @('Sensor', 'System') 'Sensor|Accelerometer|Gyro|Lid|ALS|Ambient|Thermal|Qualcomm.*SoC')
+$monitors = @(Get-ClassDevices @('Monitor') '.*')
 
 # Windows Activation status
 $lic = Get-CimInstance SoftwareLicensingProduct -Filter "ApplicationID='55c92734-d682-4d71-983e-d6ec3f16059f' AND PartialProductKey IS NOT NULL" | Select-Object -First 1 Name, LicenseStatus, PartialProductKey
@@ -519,7 +527,7 @@ $tpm = Get-CimInstance -Namespace "Root\CIMV2\Security\MicrosoftTpm" -ClassName 
 
     cs = raw.get("ComputerSystem") or {}
     prod = raw.get("Product") or {}
-    cpus = raw.get("CPUs") or []
+    cpus = _as_list(raw.get("CPUs"))
     model_str = f"{cs.get('Model', '')} {prod.get('Version', '')} {cs.get('SystemFamily', '')}".strip()
     cpu_name = cpus[0].get("Name", "Unknown CPU") if cpus else "Unknown CPU"
 
@@ -570,7 +578,7 @@ $tpm = Get-CimInstance -Namespace "Root\CIMV2\Security\MicrosoftTpm" -ClassName 
             "detail": "Nessuna batteria trovata tramite WMI/powercfg (normale su PC fisso, anomalo su portatile).",
         })
 
-    disks = raw.get("PhysicalDisks") or []
+    disks = _as_list(raw.get("PhysicalDisks"))
     for d in disks:
         h = (d.get("HealthStatus") or "").upper()
         if h and h != "HEALTHY":
@@ -587,7 +595,7 @@ $tpm = Get-CimInstance -Namespace "Root\CIMV2\Security\MicrosoftTpm" -ClassName 
                 "detail": f"Stato: {d.get('HealthStatus')} | Bus: {d.get('BusType')} | Temp: {d.get('TemperatureC') or 'N/D'} C | Ore vita (POH): {d.get('PowerOnHours') or 'N/D'}",
             })
 
-    dev_errors = raw.get("DeviceErrors") or []
+    dev_errors = _as_list(raw.get("DeviceErrors"))
     if len(dev_errors) > 0:
         score -= min(20, len(dev_errors) * 5)
         alerts.append({
