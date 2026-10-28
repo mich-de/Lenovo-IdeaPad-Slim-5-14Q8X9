@@ -615,21 +615,36 @@ document.getElementById("btn-reset-kb").addEventListener("click", () => {
   kbGrid.querySelectorAll(".kb-key").forEach((el) => el.classList.remove("tested", "active"));
 });
 
-// 7. WEBCAM TESTER
+// 7. WEBCAM TESTER (LIVE + SNAPSHOT + 5s VIDEO/AUDIO RECORDING PLAYBACK)
 let webcamStream = null;
 const videoEl = document.getElementById("webcam-video");
 const camPlaceholder = document.getElementById("webcam-placeholder");
 const camBadge = document.getElementById("cam-status-badge");
+const btnRecCam = document.getElementById("btn-rec-cam");
+const btnSnapCam = document.getElementById("btn-snap-cam");
+const camPlaybackBox = document.getElementById("cam-playback-box");
+const camRecordedVideo = document.getElementById("cam-recorded-video");
+const camSnapshotImg = document.getElementById("cam-snapshot-img");
+const camPlaybackTitle = document.getElementById("cam-playback-title");
 
 document.getElementById("btn-start-cam").addEventListener("click", async () => {
   try {
-    webcamStream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
-      audio: false,
-    });
+    try {
+      webcamStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: true,
+      });
+    } catch (_) {
+      webcamStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
+        audio: false,
+      });
+    }
     videoEl.srcObject = webcamStream;
     camPlaceholder.style.display = "none";
     document.getElementById("btn-stop-cam").disabled = false;
+    btnRecCam.disabled = false;
+    btnSnapCam.disabled = false;
     interactiveState.webcamTested = true;
 
     const track = webcamStream.getVideoTracks()[0];
@@ -644,6 +659,62 @@ document.getElementById("btn-start-cam").addEventListener("click", async () => {
   }
 });
 
+btnSnapCam.addEventListener("click", () => {
+  if (!webcamStream) return;
+  const c = document.createElement("canvas");
+  c.width = videoEl.videoWidth || 1280;
+  c.height = videoEl.videoHeight || 720;
+  c.getContext("2d").drawImage(videoEl, 0, 0, c.width, c.height);
+  camSnapshotImg.src = c.toDataURL("image/png");
+  camPlaybackBox.style.display = "block";
+  camRecordedVideo.style.display = "none";
+  camRecordedVideo.pause();
+  camSnapshotImg.style.display = "block";
+  camPlaybackTitle.textContent = `📸 Foto Scattata (${c.width}x${c.height}) — Verifica nitidezza lente`;
+});
+
+btnRecCam.addEventListener("click", () => {
+  if (!webcamStream) return;
+  const chunks = [];
+  let rec;
+  try {
+    rec = new MediaRecorder(webcamStream);
+  } catch (err) {
+    alert(`Registrazione video non supportata: ${err.message}`);
+    return;
+  }
+  btnRecCam.disabled = true;
+  let secLeft = 5;
+  btnRecCam.textContent = `⏺️ Registrazione... (${secLeft}s)`;
+  const timer = setInterval(() => {
+    secLeft -= 1;
+    if (secLeft > 0) {
+      btnRecCam.textContent = `⏺️ Registrazione... (${secLeft}s)`;
+    }
+  }, 1000);
+
+  rec.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) chunks.push(e.data);
+  };
+  rec.onstop = () => {
+    clearInterval(timer);
+    btnRecCam.disabled = false;
+    btnRecCam.textContent = "🔴 Registra Clip + Voce (5s)";
+    const blob = new Blob(chunks, { type: rec.mimeType || "video/webm" });
+    const url = URL.createObjectURL(blob);
+    camPlaybackBox.style.display = "block";
+    camSnapshotImg.style.display = "none";
+    camRecordedVideo.style.display = "block";
+    camRecordedVideo.src = url;
+    camPlaybackTitle.textContent = "🎬 Riproduzione Clip Video + Audio Registrata (5s):";
+    camRecordedVideo.play().catch(() => {});
+  };
+  rec.start();
+  setTimeout(() => {
+    if (rec.state === "recording") rec.stop();
+  }, 5000);
+});
+
 document.getElementById("btn-stop-cam").addEventListener("click", () => {
   if (webcamStream) {
     webcamStream.getTracks().forEach((t) => t.stop());
@@ -653,6 +724,8 @@ document.getElementById("btn-stop-cam").addEventListener("click", () => {
   camPlaceholder.style.display = "block";
   camPlaceholder.textContent = "Webcam fermata.";
   document.getElementById("btn-stop-cam").disabled = true;
+  btnRecCam.disabled = true;
+  btnSnapCam.disabled = true;
 });
 
 // 8. STEREO SPEAKERS SYNTHESIZER (WEB AUDIO API)
@@ -693,10 +766,54 @@ document.getElementById("btn-spk-left").addEventListener("click", () => playSter
 document.getElementById("btn-spk-right").addEventListener("click", () => playStereoTone(1, false));
 document.getElementById("btn-spk-sweep").addEventListener("click", () => playStereoTone(0, true));
 
-// 9. MICROPHONE FFT VISUALIZER
+// 9. MICROPHONE FFT VISUALIZER + 4s VOICE RECORD & AUTO-PLAYBACK
 let micStream = null;
 let micAnimId = null;
 let maxMicPeak = 0;
+const btnRecMic = document.getElementById("btn-rec-mic");
+const micPlaybackBox = document.getElementById("mic-playback-box");
+const micRecordedAudio = document.getElementById("mic-recorded-audio");
+const micRecStatus = document.getElementById("mic-rec-status");
+
+function startMicTestRecording() {
+  if (!micStream) return;
+  const chunks = [];
+  let rec;
+  try {
+    rec = new MediaRecorder(micStream);
+  } catch (err) {
+    alert(`Registrazione audio non supportata: ${err.message}`);
+    return;
+  }
+  btnRecMic.disabled = true;
+  let secLeft = 4;
+  btnRecMic.textContent = `⏺️ Parla ora... (${secLeft}s)`;
+  const timer = setInterval(() => {
+    secLeft -= 1;
+    if (secLeft > 0) {
+      btnRecMic.textContent = `⏺️ Parla ora... (${secLeft}s)`;
+    }
+  }, 1000);
+
+  rec.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) chunks.push(e.data);
+  };
+  rec.onstop = () => {
+    clearInterval(timer);
+    btnRecMic.disabled = false;
+    btnRecMic.textContent = "🔴 Registra & Riascolta (4s)";
+    const blob = new Blob(chunks, { type: rec.mimeType || "audio/webm" });
+    const url = URL.createObjectURL(blob);
+    micPlaybackBox.style.display = "block";
+    micRecStatus.textContent = "🔊 Riproduzione della tua voce registrata (verifica pulizia e assenza fruscii):";
+    micRecordedAudio.src = url;
+    micRecordedAudio.play().catch(() => {});
+  };
+  rec.start();
+  setTimeout(() => {
+    if (rec.state === "recording") rec.stop();
+  }, 4000);
+}
 
 document.getElementById("btn-start-mic").addEventListener("click", async () => {
   try {
@@ -714,6 +831,7 @@ document.getElementById("btn-start-mic").addEventListener("click", async () => {
     const cctx = canvas.getContext("2d");
 
     document.getElementById("btn-stop-mic").disabled = false;
+    btnRecMic.disabled = false;
 
     function drawMic() {
       micAnimId = requestAnimationFrame(drawMic);
@@ -741,10 +859,14 @@ document.getElementById("btn-start-mic").addEventListener("click", async () => {
       }
     }
     drawMic();
+    // Avvia subito una registrazione test di 4 secondi con riascolto automatico!
+    startMicTestRecording();
   } catch (err) {
     alert(`Impossibile accedere al microfono: ${err.message}`);
   }
 });
+
+btnRecMic.addEventListener("click", () => startMicTestRecording());
 
 document.getElementById("btn-stop-mic").addEventListener("click", () => {
   if (micAnimId) cancelAnimationFrame(micAnimId);
@@ -753,6 +875,7 @@ document.getElementById("btn-stop-mic").addEventListener("click", () => {
     micStream = null;
   }
   document.getElementById("btn-stop-mic").disabled = true;
+  btnRecMic.disabled = true;
 });
 
 // 10. PHYSICAL CHECKLIST & EXPORT REPORT

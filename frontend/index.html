@@ -219,9 +219,20 @@
             <div id="webcam-placeholder" class="video-placeholder">Premi "Avvia Webcam" per testare il sensore video</div>
           </div>
           <div class="btn-row">
-            <button id="btn-start-cam" class="btn btn-primary">Avvia Webcam</button>
-            <button id="btn-stop-cam" class="btn btn-secondary" disabled>Ferma Webcam</button>
+            <button id="btn-start-cam" class="btn btn-primary">📹 Avvia Webcam</button>
+            <button id="btn-rec-cam" class="btn btn-success" disabled>🔴 Registra Clip + Voce (5s)</button>
+            <button id="btn-snap-cam" class="btn btn-secondary" disabled>📸 Scatta Foto</button>
+            <button id="btn-stop-cam" class="btn btn-secondary" disabled>Ferma</button>
+          </div>
+          <div style="margin-top:0.5rem;">
             <span id="cam-res-info" class="muted"></span>
+          </div>
+          <div id="cam-playback-box" style="display:none; margin-top:0.75rem; padding:0.75rem; background:#090d14; border:1px solid #1e293b; border-radius:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+              <strong style="font-size:0.85rem; color:#38bdf8;" id="cam-playback-title">Anteprima Registrazione Video/Foto</strong>
+            </div>
+            <video id="cam-recorded-video" controls style="width:100%; max-height:220px; border-radius:6px; display:none;"></video>
+            <img id="cam-snapshot-img" alt="Snapshot Webcam" style="width:100%; max-height:220px; object-fit:contain; border-radius:6px; display:none;" />
           </div>
         </div>
 
@@ -243,7 +254,7 @@
           <hr class="divider" />
 
           <div class="audio-section">
-            <h4>2. Microfoni Interni (Parla o batti le mani vicino allo schermo)</h4>
+            <h4>2. Microfoni Interni (Spettrometro + Registrazione & Riascolto Voce)</h4>
             <div class="mic-meter-box">
               <canvas id="mic-canvas" width="480" height="80"></canvas>
               <div class="mic-peak-row">
@@ -252,8 +263,15 @@
               </div>
             </div>
             <div class="btn-row">
-              <button id="btn-start-mic" class="btn btn-primary">🎙️ Avvia Test Microfono</button>
-              <button id="btn-stop-mic" class="btn btn-secondary" disabled>Ferma Microfono</button>
+              <button id="btn-start-mic" class="btn btn-primary">🎙️ Avvia Microfono</button>
+              <button id="btn-rec-mic" class="btn btn-success" disabled>🔴 Registra & Riascolta (4s)</button>
+              <button id="btn-stop-mic" class="btn btn-secondary" disabled>Ferma</button>
+            </div>
+            <div id="mic-playback-box" style="display:none; margin-top:0.75rem; padding:0.75rem; background:#090d14; border:1px solid #1e293b; border-radius:8px;">
+              <div style="font-size:0.85rem; color:#4ade80; margin-bottom:0.4rem;">
+                <strong id="mic-rec-status">✔ Registrazione completata — Riascolto automatico:</strong>
+              </div>
+              <audio id="mic-recorded-audio" controls style="width:100%; height:36px;"></audio>
             </div>
           </div>
         </div>
