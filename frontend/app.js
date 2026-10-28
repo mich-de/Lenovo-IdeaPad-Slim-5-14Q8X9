@@ -565,29 +565,48 @@ function buildKeyboard() {
 }
 buildKeyboard();
 
-window.addEventListener("keydown", (e) => {
+function handleKeyboardTestEvent(e) {
   const tabKb = document.getElementById("tab-display-kb");
-  if (!tabKb.classList.contains("active") || !overlay.classList.contains("hidden")) return;
-  if (["F1", "F3", "F5", "F6", "F7", "F11", "F12", "Tab", "AltLeft", "AltRight", "Space", "ArrowUp", "ArrowDown"].includes(e.code)) {
-    e.preventDefault();
+  if (!tabKb || !tabKb.classList.contains("active") || !overlay.classList.contains("hidden")) return;
+
+  // Blocca QUALSIASI azione predefinita del browser (F1-F12, F5 refresh, F11, F12 DevTools, Tab, Alt, Spazio, Backspace, Ctrl+R/W/T/F/S/P, ContextMenu, ecc.)
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (navigator.keyboard && typeof navigator.keyboard.lock === "function") {
+    navigator.keyboard.lock().catch(() => {});
   }
+
   document.getElementById("last-key-code").textContent = `${e.key} (Code: ${e.code})`;
   const keyEl = kbGrid.querySelector(`[data-code="${e.code}"]`);
   if (keyEl) {
-    keyEl.classList.add("active");
-    keyEl.classList.add("tested");
+    if (e.type === "keydown") {
+      keyEl.classList.add("active");
+      keyEl.classList.add("tested");
+    } else if (e.type === "keyup") {
+      keyEl.classList.remove("active");
+    }
   }
-  testedKeys.add(e.code);
-  interactiveState.keysTestedCount = testedKeys.size;
-  document.getElementById("kb-counter").textContent = `${testedKeys.size} tasti verificati`;
-});
+  if (e.type === "keydown") {
+    testedKeys.add(e.code);
+    interactiveState.keysTestedCount = testedKeys.size;
+    document.getElementById("kb-counter").textContent = `${testedKeys.size} tasti verificati`;
+  }
+}
 
-window.addEventListener("keyup", (e) => {
-  const keyEl = kbGrid.querySelector(`[data-code="${e.code}"]`);
-  if (keyEl) {
-    keyEl.classList.remove("active");
-  }
-});
+window.addEventListener("keydown", handleKeyboardTestEvent, { capture: true });
+window.addEventListener("keyup", handleKeyboardTestEvent, { capture: true });
+
+window.addEventListener(
+  "contextmenu",
+  (e) => {
+    const tabKb = document.getElementById("tab-display-kb");
+    if (tabKb && tabKb.classList.contains("active") && overlay.classList.contains("hidden")) {
+      e.preventDefault();
+    }
+  },
+  { capture: true }
+);
 
 document.getElementById("btn-reset-kb").addEventListener("click", () => {
   testedKeys.clear();
